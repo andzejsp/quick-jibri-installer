@@ -108,6 +108,8 @@ INFO_LOCALE="Information"
 MEETING_ID="Meeting ID"
 #Jibri nickname randomizer. Dont change this
 RAND_STR=$(openssl rand -hex 12)
+# Jibri nickname
+JB_NICKNAME_RND="Live-$RAND_STR"
 ### ---------------------------------------------
 ### ---------------------------------------------
 ### 1_VAR_DEF
@@ -126,17 +128,6 @@ check_var() {
     fi
 }
 
-if [ -z "$LAST" ]; then
-    echo "There is an error on the LAST definition, please report."
-    exit
-elif [ "$LAST" = "TBD" ]; then
-    ADDUP=$((START + 1))
-else
-    ADDUP=$((LAST + 1))
-fi
-
-# Jibri nickname
-JB_NICKNAME_RND="Live-$ADDUP-$RAND_STR"
 
 echo "
 #-----------------------------------------------------------------------
@@ -234,8 +225,8 @@ else
 fi
 
 # Rename hostname for each jibri node
-hostnamectl set-hostname "jbnode${ADDUP}.${MAIN_SRV_DOMAIN}"
-sed -i "1i 127.0.0.1 jbnode${ADDUP}.${MAIN_SRV_DOMAIN}" /etc/hosts
+hostnamectl set-hostname "jbnode${RAND_STR}.${MAIN_SRV_DOMAIN}"
+sed -i "1i 127.0.0.1 jbnode${RAND_STR}.${MAIN_SRV_DOMAIN}" /etc/hosts
 
 # Jitsi-Meet Repo
 echo "Add Jitsi repo"
@@ -771,7 +762,7 @@ jibri {
     // If all clients have their audio and video muted and if Jibri does not
     // detect any data stream (audio or video) comming in, it will stop
     // recording after NO_MEDIA_TIMEOUT expires.
-    no-media-timeout = 10 seconds
+    // no-media-timeout = 10 seconds
 
     // If all clients have their audio and video muted, Jibri consideres this
     // as an empty call and stops the recording after ALL_MUTED_TIMEOUT expires.
@@ -780,7 +771,7 @@ jibri {
     // When detecting if a call is empty, Jibri takes into consideration for how
     // long the call has been empty already. If it has been empty for more than
     // DEFAULT_CALL_EMPTY_TIMEOUT, it will consider it empty and stop the recording.
-    default-call-empty-timeout = 10 seconds
+    default-call-empty-timeout = 5 seconds
     }
 }
 NEW_CONF

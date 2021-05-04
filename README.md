@@ -24,6 +24,11 @@ Copy the modified `add-jibri-node.sh` file from your early cloned installation d
 bash add-jibri-node.sh
 ```
 
+To add Jibri node with Mattermost (bot/webhook post in finalize_recording.sh) and Nextcloud (upload recording to cloud) options use this:
+```
+bash add-jibri-node-mm-nextcloud-no-ssh.sh
+```
+
 ### Add JVB2 node
 
 Copy the modified `add-jvb2-node.sh` file from your early cloned installation directory once the installation is completed, to the new server meant to be a jibri node using your preferred method, then run it

@@ -105,7 +105,7 @@ MM_TEAM_NAME="team-name"
 # Mattermost channel name lowercases, spaces replaced with '-' --> town-square
 MM_CHANNEL_NAME="channel-name"
 #Jibri nickname randomizer
-RAND_STR=$(openssl rand -base64 12)
+RAND_STR=$(openssl rand -hex 12)
 ### ---------------------------------------------
 ### 1_VAR_DEF
 

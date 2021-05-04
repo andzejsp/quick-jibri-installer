@@ -9,7 +9,7 @@ As for our current latest release, as we have integrated more and more features,
 Login into your clean server, clone git repository and run the installer,
 
 ```
-git clone https://github.com/switnet-ltd/quick-jibri-installer
+git clone https://github.com/andzejsp/quick-jibri-installer
 cd quick-jibri-installer
 sudo bash quick_jibri_installer.sh
 ```

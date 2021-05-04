@@ -5,6 +5,14 @@ Bash installer for Jibri on supported **Ubuntu LTS** based systems using **nginx
 As for our current latest release, as we have integrated more and more features, we highly recommend to use a purpose specific-newly spawn server to host the jitsi-meet framework, making sure you stick to the requirements and recommendations as much as possible, in order to avoid issues.
 
 
+### Must haves before usage
+Your VM must have git and curl befor you start bashing.
+
+```
+sudo apt install git -y
+sudo apt install curl -y
+```
+
 ### Main Server
 Login into your clean server, clone git repository and run the installer,
 

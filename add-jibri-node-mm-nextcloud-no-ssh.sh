@@ -77,6 +77,7 @@ GITHUB_RAW="https://raw.githubusercontent.com"
 GIT_REPO="andzejsp/quick-jibri-installer"
 TEST_JIBRI_ENV="$GITHUB_RAW/$GIT_REPO/unstable/tools/test-jibri-env.sh"
 ### ---------------------------------------------
+### ---------------------------------------------
 ### Additional settings for mattermost and nextcloud for use in finalize_recordings.sh
 ## If you dont use any of these services and dont need to upload to nextcloud or post to mattermost then change settings bellow to "no" and you dont have to configure the rest of the mattermost or nextcloud settings
 USE_MATTERMOST="yes" # If "yes" then after recording either bot or webhook will post a message on mattermost about the details of recording. If "no" then nothing will be posted.
@@ -104,8 +105,16 @@ MM_WEBHOOK_ICON_URL="<webhook icon url>" #Default is commented out to use icon d
 MM_TEAM_NAME="team-name"
 # Mattermost channel name lowercases, spaces replaced with '-' --> town-square
 MM_CHANNEL_NAME="channel-name"
-#Jibri nickname randomizer
+## Locales for message constructor - These needs to be edited
+MEETING_LOCALE="Meeting"
+PARTICIPANTS_LOCALE="Participants"
+DOWNLOAD_LOCALE="Download recording here"
+## Loacales for card constructor - These needs to be edited
+INFO_LOCALE="Information"
+MEETING_ID="Meeting ID"
+#Jibri nickname randomizer. Dont change this
 RAND_STR=$(openssl rand -hex 12)
+### ---------------------------------------------
 ### ---------------------------------------------
 ### 1_VAR_DEF
 
@@ -419,15 +428,6 @@ done
 ## Set usernames into a one string
 PARTICIPANTS_USERNAME_FORMATED="$(Get_formated_usernames | awk '{ printf("%s ", $0) }')"
 
-## Locales for message constructor - These needs to be edited
-MEETING_LOCALE="Meeting"
-PARTICIPANTS_LOCALE="Participants"
-DOWNLOAD_LOCALE="Download recording here"
-
-## Loacales for card constructor - These needs to be edited
-INFO_LOCALE="Information"
-MEETING_ID="Meeting ID"
-
 ## Message constructor
 T_BUILDER="#### #"$MEETING_LOCALE": "$DAT"\n\n"$PARTICIPANTS_LOCALE": "$PARTICIPANTS_USERNAME_FORMATED"\n\n"$DOWNLOAD_LOCALE": [:open_file_folder:]("$URL_TO_RECORDING")"
 
@@ -524,15 +524,6 @@ done
 
 ## Set usernames into a one string
 PARTICIPANTS_USERNAME_FORMATED="$(Get_formated_usernames | awk '{ printf("%s ", $0) }')"
-
-## Locales for message constructor - These needs to be edited
-MEETING_LOCALE="Meeting"
-PARTICIPANTS_LOCALE="Participants"
-DOWNLOAD_LOCALE="Download recording here"
-
-## Loacales for card constructor - These needs to be edited
-INFO_LOCALE="Information"
-MEETING_ID="Meeting ID"
 
 ## Message constructor
 T_BUILDER="#### #"$MEETING_LOCALE": "$DAT"\n\n"$PARTICIPANTS_LOCALE": "$PARTICIPANTS_USERNAME_FORMATED"\n\n"$DOWNLOAD_LOCALE": [:open_file_folder:]("$URL_TO_RECORDING")"
@@ -680,6 +671,17 @@ NC_SRV_DOMAIN="$NC_SRV_DOMAIN"
 NC_SHARED_RECORDINGS_FOLDER="$NC_SHARED_RECORDINGS_FOLDER"
 NC_USER="$NC_USER"
 NC_PASS="$NC_PASS"
+
+
+## Locales for message constructor - These needs to be edited
+MEETING_LOCALE="$MEETING_LOCALE"
+PARTICIPANTS_LOCALE="$PARTICIPANTS_LOCALE"
+DOWNLOAD_LOCALE="$DOWNLOAD_LOCALE"
+
+## Loacales for card constructor - These needs to be edited
+INFO_LOCALE="$INFO_LOCALE"
+MEETING_ID="$MEETING_ID"
+
 
 ## Aditional code
 $CODE_TO_WRITE
@@ -841,68 +843,71 @@ echo $DIR_RECORD
 
 if [ $USE_MATTERMOST = 'yes' ]; then
 
-		if [ $USE_MATTERMOST_BOT_TO_POST = 'yes' ]; then
-			# Post a success post as bot
-			# ------------------------------------------------------------------
-			## Get Mattermost Channel ID
-			MMCHANNEL_ID=$(curl -s -H 'authorization: Bearer '$MMBOT_TOKEN $MMAPI_URL/channels | jq -r '.[] | select(.team_name== "'$MMTEAM_NAME'") |select(.name== "'$MMCHANNEL_NAME'").id')
+if [ $USE_MATTERMOST_BOT_TO_POST = 'yes' ]; then
+# Post a success post as bot
+# ------------------------------------------------------------------
+## Get Mattermost Channel ID
+MMCHANNEL_ID=$(curl -s -H 'authorization: Bearer '$MMBOT_TOKEN $MMAPI_URL/channels | jq -r '.[] | select(.team_name== "'$MMTEAM_NAME'") |select(.name== "'$MMCHANNEL_NAME'").id')
 
-			## Message constructor
-			T_BUILDER="Hello,\nYour Jibri node ***JB_NICKNAME_RND*** has been set up correctly!\n\nJibri conf file is found here:\n`$JIBRI_CONF`\nJibri finalize_recording.sh file is found here:\n`$REC_DIR`\nJibri recordings folder is found here:\n`$DIR_RECORD`\n\nAdditional settings:\n```\nUSE_MATTERMOST=$USE_MATTERMOST\nUSE_MATTERMOST_BOT_TO_POST=$USE_MATTERMOST_BOT_TO_POST\nUSE_NEXTCLOUD=$USE_NEXTCLOUD\nUSE_REMOVE_LOCAL_RECORDING_DIR=$USE_REMOVE_LOCAL_RECORDING_DIR\n```\n"
+## Message constructor
+T_BUILDER="Hello,\nYour Jibri node ***"$JB_NICKNAME_RND"*** has been set up correctly!\n\nJibri conf file is found here:\n`"$JIBRI_CONF"`\nJibri finalize_recording.sh file is found here:\n`"$REC_DIR"`\nJibri recordings folder is found here:\n`"$DIR_RECORD"`\n\nAdditional settings:\n```\nUSE_MATTERMOST="$USE_MATTERMOST"\nUSE_MATTERMOST_BOT_TO_POST="$USE_MATTERMOST_BOT_TO_POST"\nUSE_NEXTCLOUD="$USE_NEXTCLOUD"\nUSE_REMOVE_LOCAL_RECORDING_DIR="$USE_REMOVE_LOCAL_RECORDING_DIR"\n```\n"
 
-			# Incomming Webhook constructor
-			text=${T_BUILDER}
+# Incomming Webhook constructor
+text=${T_BUILDER}
 
-			## Create Webhook data object
-			Generate_post_data()
-			{
-			  cat <<EOF
-			{
-				"channel_id": "$MMCHANNEL_ID",
-				"props": {
-					"attachments": [
-						{
-							"text": "$text"
-						}
-					]
-				}
-			}
-			EOF
-			}
+## Create Webhook data object
+Generate_post_data()
+{
+  cat <<EOF
+{
+  "channel_id": "$MMCHANNEL_ID",
+  "props": {
+    "attachments": [
+      {
+        "text": "$text"
+      }
+    ]
+  }
+}
+EOF
+}
 
-			# Sends a webhook to mattermost
-			curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data)"  -H 'Authorization: Bearer '$MMBOT_TOKEN $MMAPI_URL/posts
-			# ------------------------------------------------------------------
-			echo "Posting to mattermost as Bot"
-		else
-			# Post a success post as incomming webhook
-			# ------------------------------------------------------------------
-			# Incomming Webhook constructor
-			webhook_url=$MM_WEBHOOK_URL
-			channel=$MM_CHANNEL_NAME # Default channel "town-square"
-			username="Jibri node installer"
+# Sends a webhook to mattermost
+curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data)"  -H 'Authorization: Bearer '$MMBOT_TOKEN $MMAPI_URL/posts
+# ------------------------------------------------------------------
+echo "Posting to mattermost as Bot"
+else
+# Post a success post as incomming webhook
+# ------------------------------------------------------------------
+# Incomming Webhook constructor
+webhook_url=$MM_WEBHOOK_URL
+channel=$MM_CHANNEL_NAME # Default channel "town-square"
+username="Jibri node installer"
 
-			text="Hello,\nYour Jibri node ***JB_NICKNAME_RND*** has been set up correctly!\n\nJibri conf file is found here:\n`$JIBRI_CONF`\nJibri finalize_recording.sh file is found here:\n`$REC_DIR`\nJibri recordings folder is found here:\n`$DIR_RECORD`\n\nAdditional settings:\n```\nUSE_MATTERMOST=$USE_MATTERMOST\nUSE_MATTERMOST_BOT_TO_POST=$USE_MATTERMOST_BOT_TO_POST\nUSE_NEXTCLOUD=$USE_NEXTCLOUD\nUSE_REMOVE_LOCAL_RECORDING_DIR=$USE_REMOVE_LOCAL_RECORDING_DIR\n```\n"
+T_BUILDER="Hello,\nYour Jibri node ***"$JB_NICKNAME_RND"*** has been set up correctly!\n\nJibri conf file is found here:\n`"$JIBRI_CONF"`\nJibri finalize_recording.sh file is found here:\n`"$REC_DIR"`\nJibri recordings folder is found here:\n`"$DIR_RECORD"`\n\nAdditional settings:\n```\nUSE_MATTERMOST="$USE_MATTERMOST"\nUSE_MATTERMOST_BOT_TO_POST="$USE_MATTERMOST_BOT_TO_POST"\nUSE_NEXTCLOUD="$USE_NEXTCLOUD"\nUSE_REMOVE_LOCAL_RECORDING_DIR="$USE_REMOVE_LOCAL_RECORDING_DIR"\n```\n"
 
-			## Create Webhook data object
-			Generate_post_data()
-			{
-			  cat <<EOF
-			{
-			  "channel": "$channel",
-			  "username": "$username",
-			  "text": "$text"
-			}
-			EOF
-			}
+# Incomming Webhook constructor
+text=${T_BUILDER}
 
-			# Sends a webhook to mattermost
-			curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data)" $webhook_url
-			# ------------------------------------------------------------------
-			echo "Posting to mattermost as webhook"
-			
-		fi
-		
+## Create Webhook data object
+Generate_post_data()
+{
+  cat <<EOF
+{
+  "channel": "$channel",
+  "username": "$username",
+  "text": "$text"
+}
+EOF
+}
+
+# Sends a webhook to mattermost
+curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data)" $webhook_url
+# ------------------------------------------------------------------
+echo "Posting to mattermost as webhook"
+
+fi
+
 fi
 
 

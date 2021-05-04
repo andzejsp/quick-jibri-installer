@@ -132,6 +132,9 @@ else
     ADDUP=$((LAST + 1))
 fi
 
+# Jibri nickname
+JB_NICKNAME_RND="Live-$ADDUP-$RAND_STR"
+
 echo "
 #-----------------------------------------------------------------------
 # Checking initial necessary variables...
@@ -727,7 +730,7 @@ jibri {
                 control-muc {
                     domain = "internal.auth.$MAIN_SRV_DOMAIN"
                     room-name = "$JibriBrewery"
-                    nickname = "Live-$ADDUP-$RAND_STR"
+                    nickname = "$JB_NICKNAME_RND"
                 }
 
                 // The login information for the control MUC
@@ -833,6 +836,75 @@ echo "
 
 Jibri recordings folder is found here:"
 echo $DIR_RECORD
+
+# Test Bot or webhook on mattermsot
+
+if [ $USE_MATTERMOST = 'yes' ]; then
+
+		if [ $USE_MATTERMOST_BOT_TO_POST = 'yes' ]; then
+			# Post a success post as bot
+			# ------------------------------------------------------------------
+			## Get Mattermost Channel ID
+			MMCHANNEL_ID=$(curl -s -H 'authorization: Bearer '$MMBOT_TOKEN $MMAPI_URL/channels | jq -r '.[] | select(.team_name== "'$MMTEAM_NAME'") |select(.name== "'$MMCHANNEL_NAME'").id')
+
+			## Message constructor
+			T_BUILDER="Hello,\nYour Jibri node ***JB_NICKNAME_RND*** has been set up correctly!\n\nJibri conf file is found here:\n`$JIBRI_CONF`\nJibri finalize_recording.sh file is found here:\n`$REC_DIR`\nJibri recordings folder is found here:\n`$DIR_RECORD`\n\nAdditional settings:\n```\nUSE_MATTERMOST=$USE_MATTERMOST\nUSE_MATTERMOST_BOT_TO_POST=$USE_MATTERMOST_BOT_TO_POST\nUSE_NEXTCLOUD=$USE_NEXTCLOUD\nUSE_REMOVE_LOCAL_RECORDING_DIR=$USE_REMOVE_LOCAL_RECORDING_DIR\n```\n"
+
+			# Incomming Webhook constructor
+			text=${T_BUILDER}
+
+			## Create Webhook data object
+			Generate_post_data()
+			{
+			  cat <<EOF
+			{
+				"channel_id": "$MMCHANNEL_ID",
+				"props": {
+					"attachments": [
+						{
+							"text": "$text"
+						}
+					]
+				}
+			}
+			EOF
+			}
+
+			# Sends a webhook to mattermost
+			curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data)"  -H 'Authorization: Bearer '$MMBOT_TOKEN $MMAPI_URL/posts
+			# ------------------------------------------------------------------
+			echo "Posting to mattermost as Bot"
+		else
+			# Post a success post as incomming webhook
+			# ------------------------------------------------------------------
+			# Incomming Webhook constructor
+			webhook_url=$MM_WEBHOOK_URL
+			channel=$MM_CHANNEL_NAME # Default channel "town-square"
+			username="Jibri node installer"
+
+			text="Hello,\nYour Jibri node ***JB_NICKNAME_RND*** has been set up correctly!\n\nJibri conf file is found here:\n`$JIBRI_CONF`\nJibri finalize_recording.sh file is found here:\n`$REC_DIR`\nJibri recordings folder is found here:\n`$DIR_RECORD`\n\nAdditional settings:\n```\nUSE_MATTERMOST=$USE_MATTERMOST\nUSE_MATTERMOST_BOT_TO_POST=$USE_MATTERMOST_BOT_TO_POST\nUSE_NEXTCLOUD=$USE_NEXTCLOUD\nUSE_REMOVE_LOCAL_RECORDING_DIR=$USE_REMOVE_LOCAL_RECORDING_DIR\n```\n"
+
+			## Create Webhook data object
+			Generate_post_data()
+			{
+			  cat <<EOF
+			{
+			  "channel": "$channel",
+			  "username": "$username",
+			  "text": "$text"
+			}
+			EOF
+			}
+
+			# Sends a webhook to mattermost
+			curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data)" $webhook_url
+			# ------------------------------------------------------------------
+			echo "Posting to mattermost as webhook"
+			
+		fi
+		
+fi
+
 
 echo "
 #########################################################################

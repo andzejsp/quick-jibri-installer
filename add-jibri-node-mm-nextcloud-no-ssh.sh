@@ -99,10 +99,13 @@ MM_API_URL='http://your.domain.com/api/v4'
 MM_BOT_TOKEN='<bot access token - not token id>'
 MM_WEBHOOK_URL="<mattermost incomming webhook url>"
 MM_WEBHOOK_USERNAME="<Webhook username that will be displayed on the post>"
+MM_WEBHOOK_ICON_URL="<webhook icon url>" #Default is commented out to use icon defined in mattermost
 # Mattermost channel name lowercases, spaces replaced with '-' --> team-one
 MM_TEAM_NAME="team-name"
 # Mattermost channel name lowercases, spaces replaced with '-' --> town-square
 MM_CHANNEL_NAME="channel-name"
+#Jibri nickname randomizer
+RAND_STR=$(openssl rand -base64 12)
 ### ---------------------------------------------
 ### 1_VAR_DEF
 
@@ -539,10 +542,10 @@ card=${C_BUILDER}
 text=${T_BUILDER}
 
 # Incomming Webhook constructor
-webhook_url=$MM_WEBHOOK_URL
-channel=$MM_CHANNEL_NAME # Default channel "town-square"
-username=$MM_WEBHOOK_USERNAME
-#icon_url="<img url>" #Can be commented out, then webhook img will be used
+webhook_url="$MM_WEBHOOK_URL"
+channel="$MM_CHANNEL_NAME" # Default channel "town-square"
+username="$MM_WEBHOOK_USERNAME"
+#icon_url="$MM_WEBHOOK_ICON_URL" #Can be commented out, then webhook img will be used
 card=${C_BUILDER}
 text=${T_BUILDER}
 
@@ -579,13 +582,13 @@ NEXTCLOUD_UPLOAD_CODE()
 
 # NEXTCLOUD_UPLOAD_CODE
 # Create the shared folder to keep all recordings/recording folders on nextcloud
-curl -u $NC_USER:$NC_PASS -X MKCOL "$NC_SRV/nextcloud/remote.php/dav/files/$NC_USER/$NC_SHARED_RECORDINGS_FOLDER/$NJF_NAME"
+curl -u $NC_USER:$NC_PASS -X MKCOL "$NC_SRV_DOMAIN/nextcloud/remote.php/dav/files/$NC_USER/$NC_SHARED_RECORDINGS_FOLDER/$NJF_NAME"
 
 # Upload file to nextcloud
-curl -u $NC_USER:$NC_PASS -T "$NJF_PATH/$NJF_NAME.mp4" "$NC_SRV/nextcloud/remote.php/dav/files/$NC_USER/$NC_SHARED_RECORDINGS_FOLDER/$NJF_NAME/$NJF_NAME.mp4"
+curl -u $NC_USER:$NC_PASS -T "$NJF_PATH/$NJF_NAME.mp4" "$NC_SRV_DOMAIN/nextcloud/remote.php/dav/files/$NC_USER/$NC_SHARED_RECORDINGS_FOLDER/$NJF_NAME/$NJF_NAME.mp4"
 
 # Generate shared link
-NC_RECORDING_SHARE_LINK=$(curl -u $NC_USER:$NC_PASS -H "Accept: application/json" -H "OCS-APIRequest: true" -X POST https://cloud.daina-el.lv/ocs/v1.php/apps/files_sharing/api/v1/shares -d path="/RECORDINGS/$NJF_NAME" -d shareType=3 -d permissions=1 | jq -r '.ocs.data.url')
+NC_RECORDING_SHARE_LINK=$(curl -u $NC_USER:$NC_PASS -H "Accept: application/json" -H "OCS-APIRequest: true" -X POST "$NC_SRV_DOMAIN/ocs/v1.php/apps/files_sharing/api/v1/shares" -d path="/RECORDINGS/$NJF_NAME" -d shareType=3 -d permissions=1 | jq -r '.ocs.data.url')
 
 echo "---------------------------"
 echo "Recording can be found on: $NC_RECORDING_SHARE_LINK"
@@ -597,7 +600,7 @@ EOF_NEXTCLOUD_UPLOAD_CODE
 
 #-----------------------------------------------
 #-----------------------------------------------
-NJF_PATH=/asddas/asdas/sdsds
+
 REMOVE_LOCAL_RECORDING_DIR_CODE()
 {
   cat << EOF_REMOVE_LOCAL_RECORDING_DIR_CODE
@@ -647,7 +650,6 @@ cat << REC_DIR > $REC_DIR
 
 RECORDINGS_DIR=$DIR_RECORD
 
-
 chmod -R 770 \$RECORDINGS_DIR
 
 #Rename folder.
@@ -658,8 +660,6 @@ NJF_PATH="\$RECORDINGS_DIR/\$NJF_NAME"
 ##Prevent empty recording directory failsafe
 if [ "\$LJF_PATH" != "\$RECORDINGS_DIR" ]; then
   mv \$LJF_PATH \$NJF_PATH
-  #Workaround for jibri to do cleaning.
-  #ssh -i /home/jibri/jbsync.pem $MJS_USER@$MAIN_SRV_DOMAIN "rm -r \$LJF_PATH"
 else
   echo "No new folder recorded, not removing anything."
 fi
@@ -669,6 +669,7 @@ MM_API_URL="$MM_API_URL"
 MM_BOT_TOKEN="$MM_BOT_TOKEN"
 MM_WEBHOOK_URL="$MM_WEBHOOK_URL"
 MM_WEBHOOK_USERNAME="$MM_WEBHOOK_USERNAME"
+MM_WEBHOOK_ICON_URL="$MM_WEBHOOK_ICON_URL"
 MM_TEAM_NAME="$MM_TEAM_NAME"
 MM_CHANNEL_NAME="$MM_CHANNEL_NAME"
 
@@ -726,7 +727,7 @@ jibri {
                 control-muc {
                     domain = "internal.auth.$MAIN_SRV_DOMAIN"
                     room-name = "$JibriBrewery"
-                    nickname = "Live-$ADDUP"
+                    nickname = "Live-$ADDUP-$RAND_STR"
                 }
 
                 // The login information for the control MUC
@@ -785,92 +786,6 @@ jibri {
 }
 NEW_CONF
 
-#echo -e "\n---- Create random nodesync user ----"
-#useradd -m -g jibri $NJN_USER
-#echo "$NJN_USER:$NJN_USER_PASS" | chpasswd
-#
-#echo -e "\n---- We'll connect to main server ----"
-#read -n 1 -s -r -p "Press any key to continue..."$'\n'
-#sudo su $NJN_USER -c "ssh-keygen -t rsa -f ~/.ssh/id_rsa -b 4096 -o -a 100 -q -N ''"
-#
-##Workaround for jibri to do cleaning.
-#install -m 0600 -o jibri /home/$NJN_USER/.ssh/id_rsa /home/jibri/jbsync.pem
-#sudo su jibri -c "install -D /dev/null /home/jibri/.ssh/known_hosts"
-#sudo su jibri -c "ssh-keyscan -t rsa $MAIN_SRV_DOMAIN >> /home/jibri/.ssh/known_hosts"
-#
-#echo -e "\n\n##################\nRemote pass: $MJS_USER_PASS\n################## \n\n"
-#ssh-keyscan -t rsa $MAIN_SRV_DOMAIN >> ~/.ssh/known_hosts
-#ssh $MJS_USER@$MAIN_SRV_DOMAIN sh -c "'cat >> .ssh/authorized_keys'" < /home/$NJN_USER/.ssh/id_rsa.pub
-#sudo su $NJN_USER -c "ssh-keyscan -t rsa $MAIN_SRV_DOMAIN >> /home/$NJN_USER/.ssh/known_hosts"
-#
-#echo -e "\n---- Setup Log system ----"
-#cat << INOT_RSYNC > /etc/jitsi/jibri/remote-jbsync.sh
-##!/bin/bash
-#
-## Log process
-#exec 3>&1 4>&2
-#trap 'exec 2>&4 1>&3' 0 1 2 3
-#exec 1>/var/log/$NJN_USER/remote_jnsync.log 2>&1
-#
-## Run sync
-#while true; do
-#  inotifywait  -t 60 -r -e modify,attrib,close_write,move,delete $DIR_RECORD
-#  sudo su $NJN_USER -c "rsync -Aax  --info=progress2 --remove-source-files --exclude '.*/' $DIR_RECORD/ $MJS_USER@$MAIN_SRV_DOMAIN:$DIR_RECORD"
-#  find $DIR_RECORD -depth -type d -empty -not -path $DIR_RECORD -delete
-#done
-#INOT_RSYNC
-#
-#
-#mkdir /var/log/$NJN_USER
-#
-#cat << LOG_ROT > /etc/logrotate.d/$NJN_USER
-#/var/log/$NJN_USER/*.log {
-#    monthly
-#    missingok
-#    rotate 12
-#    compress
-#    notifempty
-#    create 0640 root root
-#    sharedscripts
-#    postrotate
-#        service remote_jnsync restart
-#    endscript
-#}
-#LOG_ROT
-#
-#echo -e "\n---- Create systemd service file ----"
-#cat << REMOTE_SYNC_SERVICE > /etc/systemd/system/remote_jnsync.service
-#[Unit]
-#Description = Sync Node to Main Jibri Service
-#After = network.target
-#
-#[Service]
-#PIDFile = /run/syncservice/remote_jnsync.pid
-#User = root
-#Group = root
-#WorkingDirectory = /var
-#ExecStartPre = /bin/mkdir /run/syncservice
-#ExecStartPre = /bin/chown -R root:root /run/syncservice
-#ExecStart = /bin/bash /etc/jitsi/jibri/remote-jbsync.sh
-#ExecReload = /bin/kill -s HUP \$MAINPID
-#ExecStop = /bin/kill -s TERM \$MAINPID
-#ExecStopPost = /bin/rm -rf /run/syncservice
-#PrivateTmp = true
-#
-#[Install]
-#WantedBy = multi-user.target
-#REMOTE_SYNC_SERVICE
-#
-#chmod 755 /etc/systemd/system/remote_jnsync.service
-#systemctl daemon-reload
-#
-#systemctl enable remote_jnsync.service
-#systemctl start remote_jnsync.service
-#
-#echo "Writting last node number..."
-#sed -i "$(var_dlim 0_VAR),$(var_dlim 1_VAR){s|LAST=.*|LAST=$ADDUP|}" add-jibri-node.sh
-#sed -i "$(var_dlim 0_LAST),$(var_dlim 1_LAST){s|LETS: .*|LETS: $(date -R)|}" add-jibri-node.sh
-#echo "Last file edition at: $(awk -F 'LETS:' '/LETS/{print$2}' add-jibri-node.sh|head -n1)"
 
 #Enable jibri services
 systemctl enable jibri
@@ -878,25 +793,6 @@ systemctl enable jibri-xorg
 systemctl enable jibri-icewm
 
 check_snd_driver
-
-#echo -e "\nSending updated add-jibri-node.sh file to main server sync user...\n"
-#cp $PWD/add-jibri-node.sh /tmp
-#sudo -u $NJN_USER scp /tmp/add-jibri-node.sh $MJS_USER@$MAIN_SRV_DOMAIN:/home/$MJS_USER/
-#rm $PWD/add-jibri-node.sh /tmp/add-jibri-node.sh
-#
-#echo "
-#########################################################################
-#                        Node addition complete!!
-#
-#                               IMPORTANT:
-#   The updated version of this file has been sent to the main server
-#    at the sync user home directory, please use that one in order to
-#  install new nodes. For security reason this version has been deleted
-#                          from this very node.
-#
-#               For customized support: http://switnet.net
-#########################################################################
-#"
 
 echo "
 -------------------------------------------
@@ -923,6 +819,30 @@ echo "
 #                        Node addition complete!!
 #########################################################################
 "
+echo "
+
+Jibri conf file is found here:"
+echo $JIBRI_CONF
+
+echo "
+
+Jibri finalize_recording.sh file is found here:"
+echo $REC_DIR
+
+echo "
+
+Jibri recordings folder is found here:"
+echo $DIR_RECORD
+
+echo "
+#########################################################################
+#                        Settings are set
+#########################################################################
+"
+
+echo -n "Do you want to reboot (y/n)? "
+read answer
+if [ "$answer" != "${answer#[Yy]}" ] ;then
 
 echo "Rebooting in..."
 secs=$((15))
@@ -932,3 +852,9 @@ while [ $secs -gt 0 ]; do
    : $((secs--))
 done
 reboot
+
+else
+    echo "Restarting jibri"
+    systemctl restart jibri
+
+fi

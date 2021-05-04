@@ -847,10 +847,10 @@ if [ $USE_MATTERMOST_BOT_TO_POST = 'yes' ]; then
 # Post a success post as bot
 # ------------------------------------------------------------------
 ## Get Mattermost Channel ID
-MMCHANNEL_ID=$(curl -s -H 'authorization: Bearer '$MMBOT_TOKEN $MMAPI_URL/channels | jq -r '.[] | select(.team_name== "'$MM_TEAM_NAME'") |select(.name== "'$MM_CHANNEL_NAME'").id')
+MM_CHANNEL_ID=$(curl -s -H 'authorization: Bearer '$MM_BOT_TOKEN $MM_API_URL/channels | jq -r '.[] | select(.team_name== "'$MM_TEAM_NAME'") |select(.name== "'$MM_CHANNEL_NAME'").id')
 
 ## Message constructor
-T_BUILDER_BOT="Hello,\nYour Jibri node ***"$JB_NICKNAME_RND"*** has been set up correctly!\n\nJibri conf file is found here:\n`"$JIBRI_CONF"`\nJibri finalize_recording.sh file is found here:\n`"$REC_DIR"`\nJibri recordings folder is found here:\n`"$DIR_RECORD"`\n\nAdditional settings:\n```\nUSE_MATTERMOST="$USE_MATTERMOST"\nUSE_MATTERMOST_BOT_TO_POST="$USE_MATTERMOST_BOT_TO_POST"\nUSE_NEXTCLOUD="$USE_NEXTCLOUD"\nUSE_REMOVE_LOCAL_RECORDING_DIR="$USE_REMOVE_LOCAL_RECORDING_DIR"\n```\n"
+T_BUILDER_BOT="Hello,\nYour Jibri node ***"$JB_NICKNAME_RND"*** has been set up correctly!\n\nJibri conf file is found here:\n"$JIBRI_CONF"\nJibri finalize_recording.sh file is found here:\n"$REC_DIR"\nJibri recordings folder is found here:\n"$DIR_RECORD"\n\nAdditional settings:\n\nUSE_MATTERMOST="$USE_MATTERMOST"\nUSE_MATTERMOST_BOT_TO_POST="$USE_MATTERMOST_BOT_TO_POST"\nUSE_NEXTCLOUD="$USE_NEXTCLOUD"\nUSE_REMOVE_LOCAL_RECORDING_DIR="$USE_REMOVE_LOCAL_RECORDING_DIR"\n\n"
 
 # Incomming Webhook constructor
 text_BOT=${T_BUILDER_BOT}
@@ -860,7 +860,7 @@ Generate_post_data_BOT()
 {
   cat <<EOF_BOT
 {
-  "channel_id": "$MMCHANNEL_ID",
+  "channel_id": "$MM_CHANNEL_ID",
   "props": {
     "attachments": [
       {
@@ -873,8 +873,8 @@ EOF_BOT
 }
 
 # Sends a webhook to mattermost
-curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data_BOT)"  -H 'Authorization: Bearer '$MMBOT_TOKEN $MMAPI_URL/posts
-echo curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data_BOT)"  -H 'Authorization: Bearer '$MMBOT_TOKEN $MMAPI_URL/posts
+curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data_BOT)"  -H 'Authorization: Bearer '$MM_BOT_TOKEN $MM_API_URL/posts
+echo curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data_BOT)"  -H 'Authorization: Bearer '$MM_BOT_TOKEN $MM_API_URL/posts
 # ------------------------------------------------------------------
 echo "Posting to mattermost as Bot"
 else
@@ -882,7 +882,7 @@ else
 # ------------------------------------------------------------------
 # Incomming Webhook constructor
 
-T_BUILDER_HOOK="Hello,\nYour Jibri node ***"$JB_NICKNAME_RND"*** has been set up correctly!\n\nJibri conf file is found here:\n`"$JIBRI_CONF"`\nJibri finalize_recording.sh file is found here:\n`"$REC_DIR"`\nJibri recordings folder is found here:\n`"$DIR_RECORD"`\n\nAdditional settings:\n```\nUSE_MATTERMOST="$USE_MATTERMOST"\nUSE_MATTERMOST_BOT_TO_POST="$USE_MATTERMOST_BOT_TO_POST"\nUSE_NEXTCLOUD="$USE_NEXTCLOUD"\nUSE_REMOVE_LOCAL_RECORDING_DIR="$USE_REMOVE_LOCAL_RECORDING_DIR"\n```\n"
+T_BUILDER_HOOK="Hello,\nYour Jibri node ***"$JB_NICKNAME_RND"*** has been set up correctly!\n\nJibri conf file is found here:\n"$JIBRI_CONF"\nJibri finalize_recording.sh file is found here:\n"$REC_DIR"\nJibri recordings folder is found here:\n"$DIR_RECORD"\n\nAdditional settings:\n\nUSE_MATTERMOST="$USE_MATTERMOST"\nUSE_MATTERMOST_BOT_TO_POST="$USE_MATTERMOST_BOT_TO_POST"\nUSE_NEXTCLOUD="$USE_NEXTCLOUD"\nUSE_REMOVE_LOCAL_RECORDING_DIR="$USE_REMOVE_LOCAL_RECORDING_DIR"\n\n"
 
 # Incomming Webhook constructor
 text_HOOK=${T_BUILDER_HOOK}

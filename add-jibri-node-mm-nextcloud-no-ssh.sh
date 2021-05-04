@@ -1,32 +1,24 @@
 #!/bin/bash
 # Jibri Node Aggregator
-# SwITNet Ltd © - 2020, https://switnet.net/
+# Original script by SwITNet Ltd © - 2020, https://switnet.net/
+#
+# This is a fork script by andzejsp
 # GPLv3 or later.
 
 
 # My personal additions
 #
-# Commented out "#Make sure the file name is the required one" check
+# Removed "#Make sure the file name is the required one" check
 # Added moreutils to requirements download list
 # Added descriptions/comments to ### 0_VAR_DEF that needs to be edited
-# Commented out "ssh -i /home/jibri/jbsync.pem $MJS_USER@$MAIN_SRV_DOMAIN "rm -r \$LJF_PATH"" in finalize_recording.sh
+# Removed "ssh -i /home/jibri/jbsync.pem $MJS_USER@$MAIN_SRV_DOMAIN "rm -r \$LJF_PATH"" in finalize_recording.sh
 # Added additional conditions for finalize_recording.sh
 # Added call-status-checks {} to jibri.conf.
-# Commented out from "echo -e "\n---- Create random nodesync user ----"" to "#Enable jibri services"
-# Commented out from "echo -e "\nSending updated add-jibri-node.sh file to main server sync user...\n"" to "echo "Rebooting in...""
+# Removed from "echo -e "\n---- Create random nodesync user ----"" to "#Enable jibri services"
+# Removed from "echo -e "\nSending updated add-jibri-node.sh file to main server sync user...\n"" to "echo "Rebooting in...""
 # Added echo and dpkg-reconfigure xserver-xorg-legacy selection before "echo "Rebooting in..."
+# Added "Do you want to reboot (y/n)"
 
-
-### 0_LAST EDITION TIME STAMP ###
-# LETS: AUTOMATED_EDITION_TIME
-### 1_LAST EDITION ###
-
-#Make sure the file name is the required one
-#if [ ! "$(basename $0)" = "add-jibri-node.sh" ]; then
-#    echo "For most cases naming won't matter, for this one it does."
-#    echo "Please use the original name for this script: \`add-jibri-node.sh', and run again."
-#    exit
-#fi
 
 while getopts m: option
 do
@@ -49,15 +41,17 @@ if ! [ "$(id -u)" = 0 ]; then
 fi
 
 ### 0_VAR_DEF
-MAIN_SRV_DIST="focal" # Default - focal - for Ubuntu20.04
-MAIN_SRV_REPO="stable" # Default - stable
-MAIN_SRV_DOMAIN="192.168.0.35" # Jitsi-meet server location or ip or fqdn
-JibriBrewery="JibriBrewery" # Default - JibriBrewery
-JB_NAME="jibri" # Prosody Jibri account on Jitsi-meet server
-JB_AUTH_PASS="JPwd" # Prosody jibri account pass on Jitsi-meet server
-JB_REC_PASS="RPwd" # Prosody recorder account pass on Jitsi-meet server
-MJS_USER="andzejsp" # SSH User on Jitsi-meet server
-MJS_USER_PASS="." # SSH Password on Jitsi-meet server 
+## Change TBD values to your personal values
+MAIN_SRV_DIST=TBD # Default - focal - for Ubuntu20.04
+MAIN_SRV_REPO=TBD # Default - stable
+MAIN_SRV_DOMAIN=TBD # Jitsi-meet server location or ip or fqdn
+JibriBrewery=TBD # Default - JibriBrewery
+JB_NAME=TBD # Prosody Jibri account on Jitsi-meet server
+JB_AUTH_PASS=TBD # Prosody jibri account pass on Jitsi-meet server
+JB_REC_PASS=TBD # Prosody recorder account pass on Jitsi-meet server
+MJS_USER=TBD # SSH User on Jitsi-meet server
+MJS_USER_PASS=TBD # SSH Password on Jitsi-meet server 
+### ---------------------------------------------
 THIS_SRV_DIST=$(lsb_release -sc)
 JITSI_REPO=$(apt-cache policy | awk '/jitsi/&&/stable/{print$3}' | awk -F / 'NR==1{print$1}')
 START=0
@@ -275,7 +269,7 @@ apt-get -y install \
                     ssh \
                     unzip \
                     wget \
-					moreutils
+					          moreutils
 
 check_snd_driver() {
 echo -e "\n# Checking ALSA - Loopback module..."
@@ -850,7 +844,7 @@ if [ $USE_MATTERMOST_BOT_TO_POST = 'yes' ]; then
 MM_CHANNEL_ID=$(curl -s -H 'authorization: Bearer '$MM_BOT_TOKEN $MM_API_URL/channels | jq -r '.[] | select(.team_name== "'$MM_TEAM_NAME'") |select(.name== "'$MM_CHANNEL_NAME'").id')
 
 ## Message constructor
-T_BUILDER_BOT="Hello,\nYour Jibri node ***"$JB_NICKNAME_RND"*** has been set up correctly!\n\nJibri conf file is found here:\n"$JIBRI_CONF"\nJibri finalize_recording.sh file is found here:\n"$REC_DIR"\nJibri recordings folder is found here:\n"$DIR_RECORD"\n\nAdditional settings:\n\nUSE_MATTERMOST="$USE_MATTERMOST"\nUSE_MATTERMOST_BOT_TO_POST="$USE_MATTERMOST_BOT_TO_POST"\nUSE_NEXTCLOUD="$USE_NEXTCLOUD"\nUSE_REMOVE_LOCAL_RECORDING_DIR="$USE_REMOVE_LOCAL_RECORDING_DIR"\n\n"
+T_BUILDER_BOT="Hello,\nYour Jibri node ***[ "$JB_NICKNAME_RND" ]*** \nhas been set up correctly!\n\nJibri conf file is found here: ***[ "$JIBRI_CONF" ]***\nJibri finalize_recording.sh file is found here: ***[ "$REC_DIR" ]***\nJibri recordings folder is found here: ***[ "$DIR_RECORD" ]***\n\nAdditional settings:\n\nUSE_MATTERMOST=***[ "$USE_MATTERMOST" ]***\nUSE_MATTERMOST_BOT_TO_POST=***[ "$USE_MATTERMOST_BOT_TO_POST" ]***\nUSE_NEXTCLOUD=***[ "$USE_NEXTCLOUD" ]***\nUSE_REMOVE_LOCAL_RECORDING_DIR=***[ "$USE_REMOVE_LOCAL_RECORDING_DIR" ]***"
 
 # Incomming Webhook constructor
 text_BOT=${T_BUILDER_BOT}
@@ -874,7 +868,7 @@ EOF_BOT
 
 # Sends a webhook to mattermost
 curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data_BOT)"  -H 'Authorization: Bearer '$MM_BOT_TOKEN $MM_API_URL/posts
-echo curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data_BOT)"  -H 'Authorization: Bearer '$MM_BOT_TOKEN $MM_API_URL/posts
+
 # ------------------------------------------------------------------
 echo "Posting to mattermost as Bot"
 else
@@ -882,7 +876,7 @@ else
 # ------------------------------------------------------------------
 # Incomming Webhook constructor
 
-T_BUILDER_HOOK="Hello,\nYour Jibri node ***"$JB_NICKNAME_RND"*** has been set up correctly!\n\nJibri conf file is found here:\n"$JIBRI_CONF"\nJibri finalize_recording.sh file is found here:\n"$REC_DIR"\nJibri recordings folder is found here:\n"$DIR_RECORD"\n\nAdditional settings:\n\nUSE_MATTERMOST="$USE_MATTERMOST"\nUSE_MATTERMOST_BOT_TO_POST="$USE_MATTERMOST_BOT_TO_POST"\nUSE_NEXTCLOUD="$USE_NEXTCLOUD"\nUSE_REMOVE_LOCAL_RECORDING_DIR="$USE_REMOVE_LOCAL_RECORDING_DIR"\n\n"
+T_BUILDER_HOOK="Hello,\nYour Jibri node ***[ "$JB_NICKNAME_RND" ]*** \nhas been set up correctly!\n\nJibri conf file is found here: ***[ "$JIBRI_CONF" ]***\nJibri finalize_recording.sh file is found here: ***[ "$REC_DIR" ]***\nJibri recordings folder is found here: ***[ "$DIR_RECORD" ]***\n\nAdditional settings:\n\nUSE_MATTERMOST=***[ "$USE_MATTERMOST" ]***\nUSE_MATTERMOST_BOT_TO_POST=***[ "$USE_MATTERMOST_BOT_TO_POST" ]***\nUSE_NEXTCLOUD=***[ "$USE_NEXTCLOUD" ]***\nUSE_REMOVE_LOCAL_RECORDING_DIR=***[ "$USE_REMOVE_LOCAL_RECORDING_DIR" ]***"
 
 # Incomming Webhook constructor
 text_HOOK=${T_BUILDER_HOOK}
@@ -901,7 +895,7 @@ EOF_HOOK
 
 # Sends a webhook to mattermost
 curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data_HOOK)" $MM_WEBHOOK_URL
-echo curl -i -X POST -H 'Content-Type: application/json' --data "$(Generate_post_data_HOOK)" $MM_WEBHOOK_URL
+
 # ------------------------------------------------------------------
 echo "Posting to mattermost as webhook"
 

@@ -74,7 +74,7 @@ NJN_RAND_TAIL="$(tr -dc "a-zA-Z0-9" < /dev/urandom | fold -w 4 | head -n1)"
 NJN_USER="jbnode${ADDUP}_${NJN_RAND_TAIL}"
 NJN_USER_PASS="$(tr -dc "a-zA-Z0-9#_*=" < /dev/urandom | fold -w 32 | head -n1)"
 GITHUB_RAW="https://raw.githubusercontent.com"
-GIT_REPO="switnet-ltd/quick-jibri-installer"
+GIT_REPO="andzejsp/quick-jibri-installer"
 TEST_JIBRI_ENV="$GITHUB_RAW/$GIT_REPO/unstable/tools/test-jibri-env.sh"
 ### ---------------------------------------------
 ### Additional settings for mattermost and nextcloud for use in finalize_recordings.sh

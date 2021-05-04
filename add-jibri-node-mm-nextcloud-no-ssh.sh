@@ -98,6 +98,7 @@ MM_API_URL='http://your.domain.com/api/v4'
 ## Mattermost bot token to be able to login and fetch userdata
 MM_BOT_TOKEN='<bot access token - not token id>'
 MM_WEBHOOK_URL="<mattermost incomming webhook url>"
+MM_WEBHOOK_USERNAME="<Webhook username that will be displayed on the post>"
 # Mattermost channel name lowercases, spaces replaced with '-' --> team-one
 MM_TEAM_NAME="team-name"
 # Mattermost channel name lowercases, spaces replaced with '-' --> town-square
@@ -670,6 +671,11 @@ MM_WEBHOOK_URL="$MM_WEBHOOK_URL"
 MM_WEBHOOK_USERNAME="$MM_WEBHOOK_USERNAME"
 MM_TEAM_NAME="$MM_TEAM_NAME"
 MM_CHANNEL_NAME="$MM_CHANNEL_NAME"
+
+NC_SRV_DOMAIN="$NC_SRV_DOMAIN"
+NC_SHARED_RECORDINGS_FOLDER="$NC_SHARED_RECORDINGS_FOLDER"
+NC_USER="$NC_USER"
+NC_PASS="$NC_PASS"
 
 ## Aditional code
 $CODE_TO_WRITE
